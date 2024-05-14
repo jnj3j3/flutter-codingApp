@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:5.7
+    restart: unless-stopped
+    container_name: backend-mysqldb-1
+    env_file: ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_DATABASE
+    ports:
+      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+    volumes:
+      - db:/var/lib/mysql
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis_container:
+    image: 'redis:latest'
+    container_name: redis-container
+    restart: always
+    ports:
+      - $REDIS_LOCAL_PORT:$REDIS_DOCKER_PORT
+    volumes:
+      - /redis/data:/data
+      - /redis/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    env_file:
+      - ./.env
+    labels:
+      - "name-=redis"
+      - "mode=standalone"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+  app:
+    container_name: backend-app-1
+    depends_on:
+      - mysqldb
+      - redis_container
+    build: ./app
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+    environment:
+      - DB_HOST=mysqldb
+      - DB_USER=$MYSQLDB_USER
+      - DB_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - DB_NAME=$MYSQLDB_DATABASE
+      - DB_PORT=$MYSQLDB_DOCKER_PORT
+      - REDIS_HOST= redis_container
+    stdin_open: true
+    tty: true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+  rust:
+    env_file: ./.env
+    build: ./compiler
+    command: cargo run
+    depends_on:
+      - mysqldb
+    environment:
+      - DB_HOST=mysqldb
+      - DB_USER=$MYSQLDB_USER
+      - DB_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - DB_NAME=$MYSQLDB_DATABASE
+      - DB_PORT=$MYSQLDB_DOCKER_PORT
+    logging:
+        options:
+          max-size: "10m"
+          max-file: "3"
+    ports:
+      - 8082:8082
+volumes: 
+  db:
+
+
