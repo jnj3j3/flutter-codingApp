@@ -1,0 +1,8 @@
+FROM rust:latest
+
+WORKDIR /src
+COPY . .
+
+RUN cargo build
+
+CMD ["cargo", "run"]

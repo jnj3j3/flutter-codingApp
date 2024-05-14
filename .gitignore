@@ -1,0 +1,7 @@
+./backend/.env
+./backend/app/.env
+./backend/app/.env.sample
+./backend/app/node_modules
+./backend/compiler/tmp
+./backend/compiler/src/utils
+
