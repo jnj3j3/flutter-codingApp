@@ -5,3 +5,4 @@
 ./backend/compiler/tmp
 ./backend/compiler/src/utils
 
+./front/lib/utils/resources/keys/flutter-coding-app.json
